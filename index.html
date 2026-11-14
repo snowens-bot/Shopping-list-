@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Shopping list</title>
+  <meta name="description" content="A simple shopping list and weekly meal plan. Works offline and stays on your device.">
+  <meta name="theme-color" content="#0e6b43">
+  <meta name="color-scheme" content="light dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Shopping">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    try {
+      var theme = localStorage.getItem('shopping-list-theme');
+      if (theme === 'light' || theme === 'dark') {
+        document.documentElement.dataset.theme = theme;
+      }
+    } catch (error) {}
+  </script>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="title-row">
+        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M8 14h16l-1.4 9.2a2 2 0 0 1-2 1.8H11.4a2 2 0 0 1-2-1.8L8 14Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M12 14c0-3.2 1.6-6 4-6s4 2.8 4 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M13 18.5v4M16 18.5v4M19 18.5v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <h1 id="page-title">Shopping list</h1>
+        <button type="button" class="theme-btn" id="theme-toggle" aria-label="Switch to dark colours">
+          <svg id="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3.5A8 8 0 1 0 20.5 14 6.5 6.5 0 0 1 15 3.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          <svg id="icon-sun" viewBox="0 0 24 24" aria-hidden="true" hidden><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <p id="summary" class="summary">Nothing to buy</p>
+      <div id="filters" class="filters" role="group" aria-label="Filter by shop"></div>
+    </header>
+
+    <main id="main">
+      <section id="panel-list" aria-label="Shopping list">
+        <div id="list"></div>
+      </section>
+      <section id="panel-meals" aria-label="Meal plan" hidden>
+        <div class="meals-toolbar">
+          <h2>This week</h2>
+          <div id="week-actions"></div>
+          <p class="hint">Monday to Sunday. Tap + to add ingredients to the list.</p>
+        </div>
+        <div id="days"></div>
+      </section>
+    </main>
+
+    <div class="action-bar" id="action-bar">
+      <button type="button" class="primary" id="add-item">Add item</button>
+    </div>
+
+    <nav class="tabbar" aria-label="Sections">
+      <button type="button" id="tab-list" aria-selected="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h11M8 12h11M8 17h11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4.5 7h.01M4.5 12h.01M4.5 17h.01" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        List
+      </button>
+      <button type="button" id="tab-meals" aria-selected="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 9h16M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Meals
+      </button>
+    </nav>
+  </div>
+
+  <dialog id="editor" aria-labelledby="editor-title">
+    <form id="editor-form" class="sheet" novalidate>
+      <div class="sheet-head">
+        <h2 id="editor-title">Add item</h2>
+        <button type="button" class="icon-btn close-btn" id="editor-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="sheet-body">
+        <p id="editor-context" class="context" hidden></p>
+        <p id="editor-status" class="status" hidden></p>
+        <label class="field" for="item-name">
+          <span id="name-label">Name</span>
+          <input id="item-name" maxlength="80" autocomplete="off" autocapitalize="sentences" placeholder="e.g. Semi-skimmed milk" aria-required="true">
+        </label>
+        <label class="field" for="item-qty">
+          <span>Quantity <span class="optional">optional</span></span>
+          <input id="item-qty" maxlength="24" autocomplete="off" placeholder="e.g. 2 or 500g">
+        </label>
+        <fieldset class="field">
+          <legend>Category</legend>
+          <div id="category-choices" class="choices"></div>
+        </fieldset>
+        <fieldset class="field">
+          <legend>Shop</legend>
+          <div id="shop-choices" class="choices"></div>
+          <div class="shop-add">
+            <input id="shop-input" maxlength="40" autocomplete="off" autocapitalize="words" placeholder="Or type a shop" aria-label="Or type a shop">
+            <button type="button" id="shop-add">Add</button>
+          </div>
+          <div id="custom-shops"></div>
+        </fieldset>
+        <p id="editor-error" class="error" role="alert" hidden></p>
+        <div class="sheet-actions">
+          <button type="submit" class="primary" id="editor-save">Add to list</button>
+          <button type="button" class="danger" id="editor-delete" hidden>Delete item</button>
+          <button type="button" class="ghost" id="editor-done" hidden>Done</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <p id="live" class="sr-only" aria-live="polite"></p>
+  <script src="app.js" defer></script>
+</body>
+</html>
